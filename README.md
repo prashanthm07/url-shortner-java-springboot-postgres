@@ -1,4 +1,5 @@
 # url-shortner-java-springboot-postgres
+## Status: WIP
 
 ### Core Tech Stack
 - [x] Backend: Java, Spring Boot, Spring Data JPA

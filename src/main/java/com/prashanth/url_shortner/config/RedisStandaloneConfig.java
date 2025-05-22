@@ -61,7 +61,7 @@ public class RedisStandaloneConfig {
 
     }
 
-    
+
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
