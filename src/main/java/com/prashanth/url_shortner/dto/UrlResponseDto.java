@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 @Data
 @AllArgsConstructor
 @Builder
-public class UrlResponse {
+public class UrlResponseDto {
     private Long id;
     private String shortUrl;
     private String originalUrl;

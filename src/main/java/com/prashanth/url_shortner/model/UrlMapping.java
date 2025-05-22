@@ -1,6 +1,7 @@
 package com.prashanth.url_shortner.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,10 @@ public class UrlMapping {
     @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private boolean isActive;
 
+    @Column(name="custom_slug", unique = true)
+    @Size(max=10)
+    private String customSlug;
+
     @Column(name="expires_at")
     private OffsetDateTime expiresAt;
 
@@ -41,7 +46,6 @@ public class UrlMapping {
 
     @Column(name="updated_at")
     private OffsetDateTime updatedAt;
-
 
     @PrePersist
     private void prePersist() {

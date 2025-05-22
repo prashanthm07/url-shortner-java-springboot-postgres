@@ -1,12 +1,15 @@
 package com.prashanth.url_shortner.service;
 
-import com.prashanth.url_shortner.dto.UrlRequest;
-import com.prashanth.url_shortner.dto.UrlResponse;
+import com.prashanth.url_shortner.dto.UrlRequestDto;
+import com.prashanth.url_shortner.dto.UrlResponseDto;
+import com.prashanth.url_shortner.exception.ErrorMessages;
+import com.prashanth.url_shortner.exception.UrlExpiredException;
+import com.prashanth.url_shortner.exception.UrlNotActiveException;
+import com.prashanth.url_shortner.exception.UrlNotFoundException;
 import com.prashanth.url_shortner.model.UrlMapping;
 import com.prashanth.url_shortner.repository.UrlMappingRepository;
 import com.prashanth.url_shortner.util.Base62Encoder;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,23 +19,27 @@ public class UrlServiceImpl implements UrlService {
     @Autowired
     private UrlMappingRepository urlMappingRepository;
 
-    @Autowired
-    private Base62Encoder base62Encoder;
-
     @Override
     @Transactional
-    public UrlResponse shortenUrl(UrlRequest urlRequest) {
+    public UrlResponseDto shortenUrl(UrlRequestDto urlRequestDto) {
+
+        if(urlRequestDto.getExpiration() != null && urlRequestDto.getExpiration().isBefore(java.time.OffsetDateTime.now())) {
+            throw new IllegalArgumentException(ErrorMessages.URL_EXPIRY_INVALID);
+        }
+
         UrlMapping urlMapping = UrlMapping.builder()
-                .longUrl(urlRequest.getOriginalUrl())
-                .expiresAt(urlRequest.getExpirationDate())
+                .longUrl(urlRequestDto.getOriginalUrl())
+                .expiresAt(urlRequestDto.getExpiration())
+                .isActive(true)
                 .build();
         urlMappingRepository.save(urlMapping);
-        String shortUrl = base62Encoder.encode(urlMapping.getId());
+        String shortUrl = Base62Encoder.encode();
+        // Collision check
         while (urlMappingRepository.existsByShortUrl(shortUrl)){
-            shortUrl = base62Encoder.encode(urlMapping.getId());
+            shortUrl = Base62Encoder.encode();
         }
         urlMapping.setShortUrl(shortUrl);
-        return UrlResponse.builder()
+        return UrlResponseDto.builder()
                 .id(urlMapping.getId())
                 .shortUrl(shortUrl)
                 .originalUrl(urlMapping.getLongUrl())
@@ -49,9 +56,16 @@ public class UrlServiceImpl implements UrlService {
         }
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping == null) {
-            throw new IllegalArgumentException("Short URL not found");
+            throw new UrlNotFoundException(ErrorMessages.URL_NOT_FOUND);
+        }
+        if(urlMapping.getExpiresAt() != null && urlMapping.getExpiresAt().isBefore(java.time.OffsetDateTime.now())) {
+            throw new UrlExpiredException(ErrorMessages.URL_EXPIRED);
+        }
+        if(!urlMapping.isActive()) {
+            throw new UrlNotActiveException(ErrorMessages.URL_NOT_ACTIVE);
         }
         urlMapping.setClickCount(urlMapping.getClickCount() + 1);
+        urlMappingRepository.save(urlMapping);
         return urlMapping.getLongUrl();
     }
 }
