@@ -13,6 +13,7 @@ public class UrlResponseDto {
     private Long id;
     private String shortUrl;
     private String originalUrl;
+    private Boolean isActive;
     private OffsetDateTime expiresAt;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

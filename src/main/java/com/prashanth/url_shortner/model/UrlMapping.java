@@ -17,6 +17,9 @@ import java.time.OffsetDateTime;
 @Table(name = "url_mappings")
 public class UrlMapping {
 
+    @Version
+    private Long version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
