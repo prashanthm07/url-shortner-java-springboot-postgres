@@ -11,6 +11,5 @@ import java.time.OffsetDateTime;
 public class UrlRequestDto {
     @NotBlank(message = "url is required")
     private String originalUrl;
-
     private OffsetDateTime expiration;
 }

@@ -11,6 +11,7 @@
 
 ### Functional Requirements
 - [x] Shorten and expand URLs (core functionality)
+- [ ] Percent Encoding (Optional)
 - [ ] Custom aliases (yourdomain.com/p/myslug)
 - [x] URL expiry (TTL for each link)
 - [ ] Rate limiting for anonymous users (prevent abuse)

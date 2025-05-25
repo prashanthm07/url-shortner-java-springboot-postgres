@@ -27,6 +27,8 @@ public class UrlServiceImpl implements UrlService {
     @Autowired
     private UrlMappingRepository urlMappingRepository;
 
+    @Autowired
+    private Base62Encoder base62Encoder;
 
     @Override
     @Transactional
@@ -42,14 +44,13 @@ public class UrlServiceImpl implements UrlService {
                 .isActive(true)
                 .build();
         urlMappingRepository.save(urlMapping);
-        String shortUrl = Base62Encoder.encode();
+        String shortUrl = base62Encoder.encode();
         // Collision check
         while (urlMappingRepository.existsByShortUrl(shortUrl)){
-            shortUrl = Base62Encoder.encode();
+            shortUrl = base62Encoder.encode();
         }
         urlMapping.setShortUrl(shortUrl);
         urlMappingRepository.save(urlMapping);
-        //cacheShorturl(shortUrl, urlMapping.getLongUrl());
         return UrlResponseDto.builder()
                 .id(urlMapping.getId())
                 .shortUrl(shortUrl)
@@ -61,10 +62,6 @@ public class UrlServiceImpl implements UrlService {
                 .build();
     }
 
-    @CachePut(value = "urlCache", key = "#shortUrl")
-    public void cacheShorturl(String shortUrl, String originalUrl) {
-        System.out.println("Cache put: " + shortUrl + " -> " + originalUrl);
-    }
     @Override
     @Cacheable(value = "urlCache", key = "#shortUrl")
     public String getOriginalUrl(String shortUrl) {
@@ -84,12 +81,5 @@ public class UrlServiceImpl implements UrlService {
         urlMapping.setClickCount(urlMapping.getClickCount() + 1);
         urlMappingRepository.save(urlMapping);
         return urlMapping.getLongUrl();
-    }
-
-    @Cacheable(value = "urlCache", key = "#shortUrl")
-    public UrlMapping getCachedUrlMapping(String shortUrl){
-        System.out.println("Cache miss: " + shortUrl);
-        return urlMappingRepository.findByShortUrl(shortUrl);
-
     }
 }

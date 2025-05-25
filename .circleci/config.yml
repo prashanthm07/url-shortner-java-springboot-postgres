@@ -1,0 +1,52 @@
+version: 2.1
+
+executors:
+  java-executor:
+    docker:
+        - image: cimg/openjdk:17.0
+    working_directory: ~/repo
+
+jobs:
+  build:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - maven-repo-{{ checksum "pom.xml" }}
+            - maven-repo-
+      - run:
+          name: Download Dependencies
+          command: mvn dependency:go-offline -B
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: maven-repo-{{ checksum "pom.xml" }}
+
+      - run:
+          name: Run Tests
+          command: mvn clean test
+
+      - run:
+          name: Package Application
+          command: mvn clean package -DskipTests
+
+  docker-build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+            name: Build Docker Image
+            command: docker build -t url-shortner .
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - docker-build:
+          requires:
+            - build
